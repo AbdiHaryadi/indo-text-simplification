@@ -11,11 +11,11 @@ from simplification.resolve_third_person_pronouns import resolve_third_person_pr
 from simplification.transform import transform
 from utils import word_list_to_sentence
 
-class Analyzer:
+class TextSimplifier:
     def __init__(self, tokenize_no_ssplit=False):
         self._stanza_pipeline = init_stanza_pipeline(tokenize_no_ssplit=tokenize_no_ssplit)
     
-    def analyze(self, document: str):
+    def simplify(self, document: str) -> list[str]:
         result = stanza_pipeline_document_process(self._stanza_pipeline, document)
         result = noun_chunk(result)
         result = extract_grammatical_function(result)
@@ -23,26 +23,31 @@ class Analyzer:
         result = resolve_third_person_pronouns(result)
         result = relative_clause_attachment(result)
         result = extract_boundaries(result)
+        result = transform(result)
+        result = tree_list_to_sentences(result)
         return result
     
-def tree_list_to_text(tree_list: list[Tree]) -> str:
+def tree_list_to_sentences(tree_list: list[Tree]) -> list[str]:
     sentence_list: list[str] = []
     for tree in tree_list:
         word_list = tree.leaves()
         sentence = word_list_to_sentence(word_list)
         sentence_list.append(sentence)
 
-    return "\n\n".join(sentence_list)
+    return sentence_list
 
 if __name__ == "__main__":
     logging.basicConfig(filename='myapp.log', level=logging.DEBUG)
+    simplifier = TextSimplifier()
 
-    analyzer = Analyzer()
-
-    document = input("Document: ")
-    result = analyzer.analyze(document)
-    Tree("Document", result).draw()
-    result = transform(result)
-    result = tree_list_to_text(result)
-    print("Result:")
-    print(result)
+    interrupt = False
+    while not interrupt:
+        try:
+            document = input("Document: ")
+            result = simplifier.simplify(document)
+            print("Result:")
+            print(result)
+            print()
+        except KeyboardInterrupt:
+            interrupt = True
+    

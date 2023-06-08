@@ -222,9 +222,24 @@ def transform_for_appositive(tree: Tree) -> tuple[Tree|None, Tree|None, bool]:
         children=first_part + last_part
     )
 
+    appos_subtrees = tree[appos_index, :]
+    appos_subtrees[0] = removed_coref(appos_subtrees[0])
     second_new_tree = Tree(
         node=concat_split_id(tree, 1),
-        children=[tree[referred_np_index]] + [Tree(node="AUX", children=["adalah"])] + tree[appos_index, :] + [last_part[-1]]
+        children=[tree[referred_np_index]] + [Tree(node="AUX", children=["adalah"])] + appos_subtrees + [last_part[-1]]
     )
 
     return (first_new_tree, second_new_tree, True)
+
+def removed_coref(tree: Tree):
+    label = tree.label()
+    attributes = label.split(";")
+    new_attributes: list[str] = []
+    for attribute in attributes:
+        if not attribute.startswith("coref"):
+            new_attributes.append(attribute)
+
+    return Tree(
+        node=";".join(new_attributes),
+        children=list(tree)
+    )
