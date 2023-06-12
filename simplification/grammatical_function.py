@@ -26,7 +26,7 @@ def extract_grammatical_function(tree_list: list[Tree]):
             subtree.set_label(f"{old_subtree_label};gfunc=OBLIQ")
 
         new_extracted_tree_list.append(Tree(
-            "S",
+            tree.label(),
             subtrees
         ))
 
@@ -114,7 +114,7 @@ def extract_grammatical_function(tree_list: list[Tree]):
                 subtrees[start_index].set_label(f"{old_subtree_label};gfunc=SUBJ")
 
         new_extracted_tree_list.append(Tree(
-            "S",
+            tree.label(),
             subtrees
         ))
 
@@ -158,7 +158,7 @@ def extract_grammatical_function(tree_list: list[Tree]):
                 index += 1
 
         new_extracted_tree_list.append(Tree(
-            "S",
+            tree.label(),
             subtrees
         ))
 
@@ -188,7 +188,7 @@ def extract_grammatical_function(tree_list: list[Tree]):
                 index += 1
 
         new_extracted_tree_list.append(Tree(
-            "S",
+            tree.label(),
             subtrees
         ))
 
@@ -204,7 +204,7 @@ def extract_grammatical_function(tree_list: list[Tree]):
                 subtree.set_label(f"{old_subtree_label};") # Blank gfunc
 
         new_extracted_tree_list.append(Tree(
-            "S",
+            tree.label(),
             subtrees
         ))
 

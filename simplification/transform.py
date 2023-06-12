@@ -80,11 +80,11 @@ def transform_for_conjoined_clauses(tree: Tree) -> tuple[Tree|None, Tree|None, b
     
     dot_node = tree[dot_index]
     first_new_tree = Tree(
-        node=concat_split_id(tree, 0),
+        node=new_id_because_of_split(tree, 0),
         children=[subtree for subtree in tree[first_conj_clause_index]] + [dot_node]
     )
     second_new_tree = Tree(
-        node=concat_split_id(tree, 1),
+        node=new_id_because_of_split(tree, 1),
         children=[subtree for subtree in tree[second_conj_clause_index]] + [dot_node]
     )
     return (first_new_tree, second_new_tree, True)
@@ -106,12 +106,9 @@ def demark_clause(tree: Tree, clause_indices: list[int]):
         children=children
     )
 
-def concat_split_id(tree: Tree, split_id: int) -> str:
+def new_id_because_of_split(tree: Tree, split_id: int) -> str:
     tree_label = tree.label()
-    if "splitid" not in tree_label:
-        return f"{tree_label};splitid={split_id}"
-    else:
-        return f"{tree_label}.{split_id}"
+    return f"{tree_label}.{split_id}"
 
 def transform_for_relative_clause(tree: Tree) -> tuple[Tree|None, Tree|None, bool]:
     rel_clause_index = 0
@@ -155,12 +152,12 @@ def transform_for_relative_clause(tree: Tree) -> tuple[Tree|None, Tree|None, boo
         last_part = last_part[1:]
 
     first_new_tree = Tree(
-        node=concat_split_id(tree, 0),
+        node=new_id_because_of_split(tree, 0),
         children=first_part + last_part
     )
 
     second_new_tree = Tree(
-        node=concat_split_id(tree, 1),
+        node=new_id_because_of_split(tree, 1),
         children=[tree[referred_np_index]] + tree[rel_clause_index, 1:] + [last_part[-1]]
     )
 
@@ -218,14 +215,14 @@ def transform_for_appositive(tree: Tree) -> tuple[Tree|None, Tree|None, bool]:
         last_part = last_part[1:]
 
     first_new_tree = Tree(
-        node=concat_split_id(tree, 0),
+        node=new_id_because_of_split(tree, 0),
         children=first_part + last_part
     )
 
     appos_subtrees = tree[appos_index, :]
     appos_subtrees[0] = removed_coref(appos_subtrees[0])
     second_new_tree = Tree(
-        node=concat_split_id(tree, 1),
+        node=new_id_because_of_split(tree, 1),
         children=[tree[referred_np_index]] + [Tree(node="AUX", children=["adalah"])] + appos_subtrees + [last_part[-1]]
     )
 

@@ -15,7 +15,7 @@ class TextSimplifier:
     def __init__(self, tokenize_no_ssplit=False):
         self._stanza_pipeline = init_stanza_pipeline(tokenize_no_ssplit=tokenize_no_ssplit)
     
-    def simplify(self, document: str) -> list[str]:
+    def simplify(self, document: str) -> list[list[str]]:
         result = stanza_pipeline_document_process(self._stanza_pipeline, document)
         result = noun_chunk(result)
         result = extract_grammatical_function(result)
@@ -24,17 +24,26 @@ class TextSimplifier:
         result = relative_clause_attachment(result)
         result = extract_boundaries(result)
         result = transform(result)
-        result = tree_list_to_sentences(result)
+        result = tree_list_to_simplified_sentences_list(result)
         return result
     
-def tree_list_to_sentences(tree_list: list[Tree]) -> list[str]:
-    sentence_list: list[str] = []
+def tree_list_to_simplified_sentences_list(tree_list: list[Tree]) -> list[list[str]]:
+    simplified_sentences_list: list[list[str]] = []
     for tree in tree_list:
-        word_list = tree.leaves()
-        sentence = word_list_to_sentence(word_list)
-        sentence_list.append(sentence)
+        _, id_attribute = tree.label().split(";")
+        _, id_value = id_attribute.split("=")
+        sentence_id, *_ = id_value.split(".")
+        sentence_id = int(sentence_id)
 
-    return sentence_list
+        while sentence_id >= len(simplified_sentences_list):
+            simplified_sentences_list.append([])
+
+        word_list = tree.leaves()
+        simplified_sentence = word_list_to_sentence(word_list)
+        simplified_sentence = simplified_sentence[0].upper() + simplified_sentence[1:]
+        simplified_sentences_list[sentence_id].append(simplified_sentence)
+
+    return simplified_sentences_list
 
 if __name__ == "__main__":
     logging.basicConfig(filename='myapp.log', level=logging.DEBUG)

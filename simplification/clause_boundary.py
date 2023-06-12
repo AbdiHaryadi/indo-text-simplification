@@ -733,16 +733,17 @@ def extract_infix_conjunctions(tree: Tree) -> Tree:
     verb: Tree | None = None
 
     while check_index < len(tree) and tree[check_index, 0] != "." and not stop_clause:
-        if (tree[check_index].label().startswith("SCONJ") or tree[check_index].label().startswith("CCONJ")):
+        subtree = tree[check_index]
+        if is_valid_conjunction(subtree):
             if subject is not None and verb is not None:
                 stop_clause = True
             else:
                 check_index += 1
         else:
-            if is_subject(tree[check_index]):
-                subject = tree[check_index]
-            elif tree[check_index].label().startswith("VERB"):
-                verb = tree[check_index]
+            if is_subject(subtree):
+                subject = subtree
+            elif subtree.label().startswith("VERB"):
+                verb = subtree
             check_index += 1
 
     if check_index == len(tree) or tree[check_index, 0] == ".":
@@ -784,3 +785,6 @@ def extract_infix_conjunctions(tree: Tree) -> Tree:
         node=tree.label(),
         children=[first_clause_tree, *tree[first_clause_stop_index:conjunction_index + 1], second_clause_tree, *tree[check_index:]]
     )
+
+def is_valid_conjunction(tree: Tree):
+    return (tree.label().startswith("SCONJ") or tree.label().startswith("CCONJ")) and tree[0] != "untuk"

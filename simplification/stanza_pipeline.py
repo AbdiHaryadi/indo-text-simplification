@@ -6,7 +6,7 @@ def init_stanza_pipeline(tokenize_no_ssplit=False):
 
 def stanza_pipeline_document_process(stanza_pipeline: stanza.Pipeline, document: str) -> list[nltk.Tree]:
     result: list[nltk.Tree] = []
-    for stanza_sentence in stanza_pipeline(document).sentences:
+    for index, stanza_sentence in enumerate(stanza_pipeline(document).sentences):
         subtree_list: list[nltk.Tree] = []
 
         for stanza_token in stanza_sentence.tokens:
@@ -17,7 +17,7 @@ def stanza_pipeline_document_process(stanza_pipeline: stanza.Pipeline, document:
             )
             subtree_list.append(subtree)
     
-        tree = nltk.Tree("S", subtree_list)
+        tree = nltk.Tree(f"S;id={index}", subtree_list)
         result.append(tree)
 
     return result
