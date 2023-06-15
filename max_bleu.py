@@ -1,5 +1,6 @@
 import nltk
 from nltk.translate.bleu_score import SmoothingFunction
+from .utils import sentence_to_word_list
 
 def bleu_score(reference, hypothesis):
     if len(hypothesis) >= 4:
@@ -24,8 +25,8 @@ def bleu_score_for_simplified_sentences_pair(simplified_sentences_output, simpli
     for reference_index, reference_sentence in enumerate(simplified_sentences_target):
         scores[reference_index] = {}
         for hypothesis_index, hypothesis_sentence in enumerate(simplified_sentences_output):
-            reference_word_list = nltk.word_tokenize(reference_sentence.lower())
-            hypothesis_word_list = nltk.word_tokenize(hypothesis_sentence.lower())
+            reference_word_list = sentence_to_word_list(reference_sentence.lower())
+            hypothesis_word_list = sentence_to_word_list(hypothesis_sentence.lower())
             score_from_bleu = bleu_score(reference=reference_word_list, hypothesis=hypothesis_word_list)
             scores[reference_index][hypothesis_index] = score_from_bleu
 

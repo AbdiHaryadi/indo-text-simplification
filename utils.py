@@ -1,3 +1,4 @@
+import nltk
 import re
 
 def word_list_to_sentence(word_list: list[str]) -> str:
@@ -28,3 +29,6 @@ def word_list_to_sentence(word_list: list[str]) -> str:
     sentence = re.sub(r"\[.+\]", "", sentence)
 
     return sentence
+
+def sentence_to_word_list(sentence):
+    return nltk.word_tokenize(sentence)
