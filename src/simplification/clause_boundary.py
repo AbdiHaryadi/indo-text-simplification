@@ -178,7 +178,7 @@ def detect_appositive_boundary(tree: Tree, start_index: int, keep_structure=True
             mismatch = True
             finding_repeated_prep_phrases = False
 
-    if mismatch:
+    if mismatch or index >= len(tree):
         return (tree, -1)
     
     if tree[index].label().startswith("PRON") and "PronType=Rel" in tree[index].label():
@@ -247,7 +247,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
             logging.info(f"End detect_restrictive_relative_clause_boundary (fail to satisfy step 1)")
             return (tree, -1)
 
-    logging.info(f"Pointer after step 1: {index=}, node{tree[index]}")
+    logging.info(f"Pointer after step 1: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
 
     # Step 2
     verb_group_contains_saying_verb = False
@@ -284,7 +284,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
     index += 1
 
     if index < len(tree):
-        logging.info(f"Pointer after step 2: {index=}, node{tree[index]}")
+        logging.info(f"Pointer after step 2: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
     else:
         logging.info(f"Pointer after step 2: {index=}, EOS")
 
@@ -299,7 +299,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
             index += 1
 
     if index < len(tree):
-        logging.info(f"Pointer after step 3: {index=}, node{tree[index]}")
+        logging.info(f"Pointer after step 3: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
     else:
         logging.info(f"Pointer after step 3: {index=}, EOS")
 
@@ -335,7 +335,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
                         new_tree, boundary_index = detect_appositive_boundary(tree, index + 1, keep_structure=keep_structure)
                         if boundary_index != -1:
                             index = boundary_index
-                            logging.info(f"Pointer after step 4.b: {index=}, node{tree[index]}")
+                            logging.info(f"Pointer after step 4.b: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                             step_4_occured = True
 
                     else:
@@ -345,7 +345,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
                             tree = new_tree
 
                             index = boundary_index
-                            logging.info(f"Pointer after step 4.b: {index=}, node{tree[index]}")
+                            logging.info(f"Pointer after step 4.b: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                             step_4_occured = True
 
             # Step 4.c (skipped, because there is no equivalent of VBG and VBN)
@@ -354,7 +354,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
                 # Step 4.d (ADV is not tested yet.)
                 if is_comma_for_implicit_conjunction_of_adjectives_or_adverbs(tree, index):
                     index += 2
-                    logging.info(f"Pointer after step 4.d: {index=}, node{tree[index]}")
+                    logging.info(f"Pointer after step 4.d: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                     step_4_occured = True
 
             if not step_4_occured:
@@ -408,7 +408,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
                                 index = boundary_index
                         
                         if not mismatch:
-                            logging.info(f"Pointer after step 4.e: {index=}, node{tree[index]}")
+                            logging.info(f"Pointer after step 4.e: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                             step_4_occured = True
                 
                 elif tree[index].label().startswith("PRON") and "PronType=Rel" in tree[index].label():
@@ -456,7 +456,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
                             index = boundary_index
 
                     if not mismatch:
-                        logging.info(f"Pointer after step 4.e: {index=}, node{tree[index]}")
+                        logging.info(f"Pointer after step 4.e: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                         step_4_occured = True
 
         if not step_4_occured:
@@ -475,7 +475,7 @@ def detect_restrictive_relative_clause_boundary(tree: Tree, start_index: int, pr
                 
                 else:
                     index += 1
-                    logging.info(f"Pointer after step 5: {index=}, node{tree[index]}")
+                    logging.info(f"Pointer after step 5: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
 
             # Step 6
             else:
@@ -523,7 +523,7 @@ def detect_nonrestrictive_relative_clause_boundary(tree: Tree, start_index: int,
             
             index += 1
         
-        logging.info(f"Pointer after step 4: {index=}, node{tree[index]}")
+        logging.info(f"Pointer after step 4: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
 
         # Step 5
         logging.info(f"Step 5.b will be skipped because there is no equivalent of VBG and VBN in Indonesia language.")
@@ -545,7 +545,7 @@ def detect_nonrestrictive_relative_clause_boundary(tree: Tree, start_index: int,
                         _, boundary_index = detect_appositive_boundary(tree, index + 1, keep_structure=keep_structure)
                         if boundary_index != -1:
                             index = boundary_index
-                            logging.info(f"Pointer after step 5.a: {index=}, node{tree[index]}")
+                            logging.info(f"Pointer after step 5.a: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                             step_5_occured = True
 
                     else:
@@ -555,7 +555,7 @@ def detect_nonrestrictive_relative_clause_boundary(tree: Tree, start_index: int,
                             logging.info(f"Tree changed because of 5.a:\n{tree}")
 
                             index = boundary_index
-                            logging.info(f"Pointer after step 5.a: {index=}, node{tree[index]}")
+                            logging.info(f"Pointer after step 5.a: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                             step_5_occured = True
 
                 # Step 5.b (skipped, because there is no equivalent of VBG and VBN)
@@ -564,7 +564,7 @@ def detect_nonrestrictive_relative_clause_boundary(tree: Tree, start_index: int,
                 if not step_5_occured:
                     if is_comma_for_implicit_conjunction_of_adjectives_or_adverbs(tree, index):
                         index += 2
-                        logging.info(f"Pointer after step 5.c: {index=}, node{tree[index]}")
+                        logging.info(f"Pointer after step 5.c: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                         step_5_occured = True
 
                 # Step 5.d
@@ -585,7 +585,7 @@ def detect_nonrestrictive_relative_clause_boundary(tree: Tree, start_index: int,
                                 logging.info(f"Tree changed because of 4.e.i:\n{tree}")
                             
                             index += 1
-                            logging.info(f"Pointer after step 4.e: {index=}, node{tree[index]}")
+                            logging.info(f"Pointer after step 4.e: {index=}, node{tree[index] if index < len(tree) else 'EOS'}")
                             step_5_occured = True
 
             if not step_5_occured:
