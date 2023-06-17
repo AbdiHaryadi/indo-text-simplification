@@ -1,10 +1,10 @@
 import csv
 import json
 import time
-from max_bleu import bleu_score_for_simplified_sentences_pair
-from simplification.stanza_pipeline import init_stanza_pipeline, stanza_pipeline_document_process
+from .max_bleu import bleu_score_for_simplified_sentences_pair
+from .simplification.stanza_pipeline import init_stanza_pipeline, stanza_pipeline_document_process
 
-from utils import word_list_to_sentence
+from .utils import word_list_to_sentence
 
 def load_dataset(file_path: str) -> dict:
     with open(file_path, mode="r") as file:

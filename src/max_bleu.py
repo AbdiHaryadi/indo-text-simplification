@@ -1,6 +1,6 @@
 import nltk
 from nltk.translate.bleu_score import SmoothingFunction
-from utils import sentence_to_word_list
+from .utils import sentence_to_word_list
 
 def bleu_score(reference, hypothesis):
     if len(hypothesis) >= 4:

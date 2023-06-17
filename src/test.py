@@ -1,11 +1,11 @@
 import csv
-import indo_ts
+from . import indo_ts
 import json
 import nltk
 import time
-from max_bleu import bleu_score_for_simplified_sentences_pair
+from .max_bleu import bleu_score_for_simplified_sentences_pair
 
-from utils import word_list_to_sentence
+from .utils import word_list_to_sentence
 analyzer = indo_ts.TextSimplifier(tokenize_no_ssplit=True)
 
 def load_dataset(file_path: str) -> dict:

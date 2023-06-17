@@ -1,15 +1,15 @@
 import logging
 from nltk.tree import Tree
-from simplification.agreement import extract_agreements_from_head_noun
-from simplification.clause_boundary import extract_boundaries
-from simplification.grammatical_function import extract_grammatical_function
-from simplification.noun_chunk import noun_chunk
+from .simplification.agreement import extract_agreements_from_head_noun
+from .simplification.clause_boundary import extract_boundaries
+from .simplification.grammatical_function import extract_grammatical_function
+from .simplification.noun_chunk import noun_chunk
 
-from simplification.stanza_pipeline import init_stanza_pipeline, stanza_pipeline_document_process
-from simplification.relative_clause_attachment import relative_clause_attachment
-from simplification.resolve_third_person_pronouns import resolve_third_person_pronouns
-from simplification.transform import transform
-from utils import word_list_to_sentence
+from .simplification.stanza_pipeline import init_stanza_pipeline, stanza_pipeline_document_process
+from .simplification.relative_clause_attachment import relative_clause_attachment
+from .simplification.resolve_third_person_pronouns import resolve_third_person_pronouns
+from .simplification.transform import transform
+from .utils import word_list_to_sentence
 
 class TextSimplifier:
     def __init__(self, tokenize_no_ssplit=False):
