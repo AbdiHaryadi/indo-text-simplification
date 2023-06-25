@@ -25,7 +25,6 @@ class TextSimplifier:
     def simplify(self, document: str) -> list[list[str]]:
         result = self._stanza_pipeline(document)
         result = self._noun_chunk_pipeline(result)
-        Tree("D", result).draw()
         result = extract_grammatical_function(result)
         result = extract_agreements_from_head_noun(result)
         result = self._third_person_pronouns_pipeline(result)
