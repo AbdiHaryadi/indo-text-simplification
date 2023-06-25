@@ -1,7 +1,6 @@
 import csv
 from . import indo_ts
 import json
-import nltk
 import time
 from .max_bleu import bleu_score_for_simplified_sentences_pair
 
@@ -96,7 +95,7 @@ for document_id, simplified_sentences in result.items():
     result: list[list[str]] = analyzer.simplify(document)
 
     # Baseline 1:
-    # result: list[list[str]] = [[sentence] * 7 for sentence in document.split("\n\n")]
+    # result: list[list[str]] = [[sentence] * 4 for sentence in document.split("\n\n")]
 
     for sentence_index in simplified_sentences.keys():
         input_sentence = word_list_to_sentence(content["clean_article"][sentence_index])

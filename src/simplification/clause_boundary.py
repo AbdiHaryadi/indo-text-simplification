@@ -5,16 +5,16 @@ from .grammatical_function import is_subject
 
 from .resolve_third_person_pronouns import get_salience
 
-def extract_boundaries(tree_list: list[Tree]):
+def extract_boundaries(tree_list: list[Tree], strategy=1):
     logging.info("Relative clause boundary starts.")
 
     new_tree_list: list[Tree] = []
     for tree in tree_list:
-        new_tree_list.append(extract_boundaries_for_single_tree(tree, start_index=0))
+        new_tree_list.append(extract_boundaries_for_single_tree(tree, start_index=0, strategy=strategy))
 
     return new_tree_list
 
-def extract_boundaries_for_single_tree(initial_tree: Tree, start_index: int) -> Tree:
+def extract_boundaries_for_single_tree(initial_tree: Tree, start_index: int, strategy=1) -> Tree:
     if len(initial_tree) == 0:
         return initial_tree
 
@@ -25,7 +25,7 @@ def extract_boundaries_for_single_tree(initial_tree: Tree, start_index: int) -> 
 
         if tree[subtree_index].label().startswith("NP"):
             if subtree_index > 0 and tree[subtree_index - 1, 0] == ",":
-                new_tree, stop_index = extract_appositive_structure(tree, subtree_index)
+                new_tree, stop_index = extract_appositive_structure(tree, subtree_index, strategy=strategy)
                 if stop_index != -1:
                     tree = new_tree
                     subtree_index = stop_index
@@ -58,8 +58,8 @@ def extract_boundaries_for_single_tree(initial_tree: Tree, start_index: int) -> 
     tree = extract_infix_conjunctions(tree)
     return tree
 
-def extract_appositive_structure(tree: Tree, start_index: int) -> tuple[Tree, int]:
-    new_tree, boundary_index = detect_appositive_boundary(tree, start_index, keep_structure=False)
+def extract_appositive_structure(tree: Tree, start_index: int, strategy=1) -> tuple[Tree, int]:
+    new_tree, boundary_index = detect_appositive_boundary(tree, start_index, keep_structure=False, strategy=strategy)
     if boundary_index == -1:
         return (tree, -1)
     
@@ -139,7 +139,7 @@ def extract_appositive_structure(tree: Tree, start_index: int) -> tuple[Tree, in
 
     return (extracted_tree, start_index + 1)
 
-def detect_appositive_boundary(tree: Tree, start_index: int, keep_structure=True):
+def detect_appositive_boundary(tree: Tree, start_index: int, keep_structure=True, strategy=1):
     """Detect appostive boundary. Return -1 if it is not appositive.
     
     """
@@ -173,6 +173,9 @@ def detect_appositive_boundary(tree: Tree, start_index: int, keep_structure=True
         
         elif tree[index, 0] in [",", "."]:
             finding_repeated_prep_phrases = False
+        
+        elif strategy == 4 and tree[index].label().startswith("VERB"):
+            finding_repeated_prep_phrases = False
 
         else:
             mismatch = True
@@ -201,8 +204,12 @@ def detect_appositive_boundary(tree: Tree, start_index: int, keep_structure=True
         logging.info(f"End detect_appositive_boundary")
         return (tree, index)
     
+    elif strategy == 4 and tree[index].label().startswith("VERB"):
+        logging.info(f"End detect_appositive_boundary")
+        return (tree, index)
+    
     elif tree[index, 0] == ",":
-        new_tree, boundary_index = detect_appositive_boundary(tree, index + 1, keep_structure=keep_structure)
+        new_tree, boundary_index = detect_appositive_boundary(tree, index + 1, keep_structure=keep_structure, strategy=strategy)
         logging.info(f"End detect_appositive_boundary")
 
         if boundary_index == -1:
@@ -656,7 +663,7 @@ def extract_prefix_conjunctions(tree: Tree) -> Tree:
     
     stop_clause = False
     while check_index < len(tree) and tree[check_index, 0] != "." and not stop_clause:
-        if tree[check_index, 0] == "," and first_verb_exists and first_subject_exists:
+        if tree[check_index, 0] == "," and first_verb_exists and first_subject_exists: # BRUUUUUUH
             if is_comma_for_implicit_conjunction_of_adjectives_or_adverbs(tree, check_index):
                 check_index += 2
             else:

@@ -2,7 +2,7 @@ import csv
 import json
 import time
 from .max_bleu import bleu_score_for_simplified_sentences_pair
-from .simplification.stanza_pipeline import init_stanza_pipeline, stanza_pipeline_document_process
+from .simplification.stanza_pipeline import init_stanza_pipeline
 
 from .utils import word_list_to_sentence
 
@@ -58,7 +58,7 @@ table_tuple_list = [
     ["ID Dokumen", "Kalimat", "Hasil Penyederhanaan", "Simplicity", "Grammaticality", "Meaning Preservation"]
 ]
 
-output_path = f"private/test_result_{int(round(time.time()))}.txt"
+output_path = f"private/test_result_{int(round(time.time()))}_wibowo.txt"
 
 total_score = 0.0
 max_score = 0.0
@@ -66,7 +66,7 @@ max_score = 0.0
 stanza_pipeline = init_stanza_pipeline(tokenize_no_ssplit=True)
 
 def simple_simplification(document: str) -> list[list[str]]:
-    tree_list = stanza_pipeline_document_process(stanza_pipeline, document)
+    tree_list = stanza_pipeline(document)
     result: list[list[str]] = []
     for tree in tree_list:
         current_simplified_sentences: list[str] = []

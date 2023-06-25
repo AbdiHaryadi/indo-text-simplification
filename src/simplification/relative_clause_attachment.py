@@ -36,7 +36,7 @@ def relative_clause_attachment(tree_list: list[Tree]) -> list[Tree]:
                 found = False
                 for coref_class_id, coref_class_details in sorted(coref_classes.items(), key=lambda x: x[1]["salience"], reverse=True):
                     np = coref_class_details["tree"]
-                    _, np_id_string, _, _ = np.label().split(";")
+                    _, np_id_string, *_ = np.label().split(";")
 
                     # Agreement filtering (skipped because ... no case)
 
@@ -88,7 +88,7 @@ def relative_clause_attachment(tree_list: list[Tree]) -> list[Tree]:
                 if not found:
                     for coref_class_id, coref_class_details in sorted(coref_classes.items(), key=lambda x: x[1]["salience"], reverse=True):
                         np = coref_class_details["tree"]
-                        _, np_id_string, _, _ = np.label().split(";")
+                        _, np_id_string, *_ = np.label().split(";")
 
                         # Agreement filtering (skipped because ... no case)
 
