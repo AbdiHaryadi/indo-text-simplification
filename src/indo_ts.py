@@ -25,12 +25,12 @@ class TextSimplifier:
     def simplify(self, document: str) -> list[list[str]]:
         result = self._stanza_pipeline(document)
         result = self._noun_chunk_pipeline(result)
-        result = extract_grammatical_function(result)
+        result = extract_grammatical_function(result, strategy=self._strategy)
         result = extract_agreements_from_head_noun(result)
         result = self._third_person_pronouns_pipeline(result)
         result = relative_clause_attachment(result)
         result = extract_boundaries(result, strategy=self._strategy)
-        result = transform(result)
+        result = transform(result, strategy=self._strategy)
         result = tree_list_to_simplified_sentences_list(result)
         return result
     
@@ -54,7 +54,7 @@ def tree_list_to_simplified_sentences_list(tree_list: list[Tree]) -> list[list[s
 
 if __name__ == "__main__":
     logging.basicConfig(filename='myapp.log', level=logging.DEBUG)
-    simplifier = TextSimplifier(strategy=4)
+    simplifier = TextSimplifier(strategy=5)
 
     interrupt = False
     while not interrupt:

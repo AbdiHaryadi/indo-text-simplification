@@ -5,7 +5,7 @@ import time
 from .max_bleu import bleu_score_for_simplified_sentences_pair
 
 from .utils import word_list_to_sentence
-analyzer = indo_ts.TextSimplifier(tokenize_no_ssplit=True)
+analyzer = indo_ts.TextSimplifier(tokenize_no_ssplit=True, strategy=5)
 
 def load_dataset(file_path: str) -> dict:
     with open(file_path, mode="r") as file:

@@ -1,6 +1,6 @@
 from nltk import Tree
 
-def extract_grammatical_function(tree_list: list[Tree]):
+def extract_grammatical_function(tree_list: list[Tree], strategy=1):
     extracted_tree_list = tree_list
 
     # Extract pattern 1
@@ -170,9 +170,10 @@ def extract_grammatical_function(tree_list: list[Tree]):
         start_index_list = [-1]
         subtrees = [subtree for subtree in tree]
 
-        for index, subtree in enumerate(subtrees):
-            if subtree.label().startswith("PUNCT"):
-                start_index_list.append(index)
+        if strategy != 5:
+            for index, subtree in enumerate(subtrees):
+                if subtree.label().startswith("PUNCT"):
+                    start_index_list.append(index)
 
         for start_index in start_index_list:
             index = start_index + 1

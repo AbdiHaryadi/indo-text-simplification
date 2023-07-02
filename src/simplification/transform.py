@@ -1,7 +1,7 @@
 from nltk import Tree
 from .utils import get_attribute_value_from_tree_label, get_coref_id_from_tree_label, is_numeric_attribute_np
 
-def transform(tree_list: list[Tree]) -> list[Tree]:
+def transform(tree_list: list[Tree], strategy=1) -> list[Tree]:
     new_tree_list: list[Tree] = []
     noun_phrase_map: dict[int, Tree] = {}
     potentially_simplified_list = tree_list.copy()
@@ -11,11 +11,20 @@ def transform(tree_list: list[Tree]) -> list[Tree]:
         changed = False
 
         first_new_tree, second_new_tree, changed = transform_for_conjoined_clauses(tree)
-        if not changed:
-            first_new_tree, second_new_tree, changed = transform_for_relative_clause(tree)
-        
-        if not changed:
-            first_new_tree, second_new_tree, changed = transform_for_appositive(tree)
+        if strategy != 5:
+            if not changed:
+                first_new_tree, second_new_tree, changed = transform_for_relative_clause(tree)
+            
+            if not changed:
+                first_new_tree, second_new_tree, changed = transform_for_appositive(tree, strategy=strategy)
+
+        else:
+            
+            if not changed:
+                first_new_tree, second_new_tree, changed = transform_for_appositive(tree, strategy=strategy)
+                
+            if not changed:
+                first_new_tree, second_new_tree, changed = transform_for_relative_clause(tree)
 
         if changed:
             potentially_simplified_list.insert(0, first_new_tree)
@@ -43,7 +52,12 @@ def transform(tree_list: list[Tree]) -> list[Tree]:
 
                 new_subtree = noun_phrase_map[coref_id]
                 noun_phrase_map[np_id] = new_subtree
-                new_subtree_list.append(new_subtree)
+
+                # Check whether the NP exists in the same tree
+                if strategy==5 and new_subtree in list(tree):
+                    new_subtree_list.append(subtree)
+                else:
+                    new_subtree_list.append(new_subtree)
 
             new_tree = Tree(
                 node=tree.label(),
@@ -178,7 +192,7 @@ def get_np_index_by_id(tree: Tree, np_id: int | str):
     else:
         return -1
     
-def transform_for_appositive(tree: Tree) -> tuple[Tree|None, Tree|None, bool]:
+def transform_for_appositive(tree: Tree, strategy=1) -> tuple[Tree|None, Tree|None, bool]:
     appos_index = 0
     while appos_index < len(tree) and tree[appos_index].label() != "SIMP-APPOS":
         appos_index += 1
@@ -220,11 +234,17 @@ def transform_for_appositive(tree: Tree) -> tuple[Tree|None, Tree|None, bool]:
     )
 
     appos_subtrees = tree[appos_index, :]
-    appos_subtrees[0] = removed_coref(appos_subtrees[0])
-    second_new_tree = Tree(
-        node=new_id_because_of_split(tree, 1),
-        children=[tree[referred_np_index]] + [Tree(node="AUX", children=["adalah"])] + appos_subtrees + [last_part[-1]]
-    )
+    if strategy != 5:
+        appos_subtrees[0] = removed_coref(appos_subtrees[0])
+        second_new_tree = Tree(
+            node=new_id_because_of_split(tree, 1),
+            children=[tree[referred_np_index]] + [Tree(node="AUX", children=["adalah"])] + list(appos_subtrees) + [last_part[-1]]
+        )
+    else:
+        second_new_tree = Tree(
+            node=new_id_because_of_split(tree, 1),
+            children=[tree[referred_np_index]] + [Tree(node="AUX", children=["adalah"])] + list(appos_subtrees) + [last_part[-1]]
+        )
 
     return (first_new_tree, second_new_tree, True)
 

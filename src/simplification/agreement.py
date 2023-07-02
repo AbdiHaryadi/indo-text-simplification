@@ -1,10 +1,78 @@
 import logging
 from nltk import Tree
+import re
 
 MASCULINE_TITLES = ["tuan", "pangeran", "raja", "kaisar", "bapak", "pak"]
 FEMININE_TITLES = ["nyonya", "nona", "ratu", "permaisuri", "ibu", "bu"]
 COMMON_TITLES = ["adipati", "pendeta", "dokter", "doktor", "profesor", "menteri", "sekretaris", "presiden"]
 COMPANY_KEYWORDS = ["perusahaan", "pt", "tbk"]
+
+PLACE_TIME_KEYWORD_LIST = [
+    "rukun tetangga",
+    "rt",
+    "rukun warga",
+    "rw",
+    "desa",
+    "dusun",
+    "kelurahan",
+    "kecamatan",
+    "kabupaten",
+    "kota",
+    "kotamadya",
+    "provinsi",
+    "negara",
+    "aceh",
+    "bangka",
+    "belitung",
+    "banten",
+    "bengkulu",
+    "jawa",
+    "kalimantan",
+    "sulawesi",
+    "nusa tenggara",
+    "ntt",
+    "ntb",
+    "gorontalo",
+    "jakarta",
+    "jambi",
+    "lampung",
+    "maluku",
+    "sumatera",
+    "sumatra",
+    "papua",
+    "riau",
+    "yogyakarta",
+    "senin",
+    "selasa",
+    "rabu",
+    "kamis",
+    "jumat",
+    "sabtu",
+    "minggu",
+    "pagi",
+    "siang",
+    "sore",
+    "malam",
+    "januari",
+    "februari",
+    "maret",
+    "april",
+    "mei",
+    "juni`",
+    "juli",
+    "agustus",
+    "september",
+    "oktober",
+    "november",
+    "desember",
+    "hari",
+    "bulan",
+    "minggu",
+    "tahun",
+    "kemarin",
+    "besok",
+    "lusa"
+]
 
 def extract_agreements_from_head_noun(tree_list: list[Tree]) -> list[Tree]:
     new_tree_list: list[Tree] = []
@@ -14,6 +82,15 @@ def extract_agreements_from_head_noun(tree_list: list[Tree]) -> list[Tree]:
             if subtree.label().startswith("NP"):
                 head_noun = get_head_noun(subtree)
                 head_noun_feats = head_noun.label().split(";")[1]
+
+                for place_time_keyword in PLACE_TIME_KEYWORD_LIST:
+                    if re.search(rf"\b{place_time_keyword}\b", " ".join(subtree.leaves()), re.IGNORECASE):
+                        if head_noun_feats != "":
+                            head_noun_feats += "|"
+                        head_noun_feats += "LocationTime=Yes"
+
+                        break
+
                 subtree.set_label(subtree.label() + f";{head_noun_feats}")
 
             # else: no modification

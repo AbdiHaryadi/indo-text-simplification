@@ -54,13 +54,20 @@ def extract_boundaries_for_single_tree(initial_tree: Tree, start_index: int, str
         else:
             subtree_index += 1
 
-    tree = extract_prefix_conjunctions(tree)
-    tree = extract_infix_conjunctions(tree)
+        
+    if strategy != 5:
+        tree = extract_prefix_conjunctions(tree, strategy=strategy)
+        tree = extract_infix_conjunctions(tree, strategy=strategy)
+    else:
+        tree = extract_infix_conjunctions(tree, strategy=strategy)
+        tree = extract_prefix_conjunctions(tree, strategy=strategy)
+
     return tree
 
 def extract_appositive_structure(tree: Tree, start_index: int, strategy=1) -> tuple[Tree, int]:
     new_tree, boundary_index = detect_appositive_boundary(tree, start_index, keep_structure=False, strategy=strategy)
     if boundary_index == -1:
+        logging.info("End extract_appositive_structure because no boundary (index: -1)")
         return (tree, -1)
     
     clause_tree = Tree(
@@ -70,6 +77,7 @@ def extract_appositive_structure(tree: Tree, start_index: int, strategy=1) -> tu
 
     # Do not simplify for one-or-two words appositive
     if len(clause_tree.leaves()) <= 2:
+        logging.info("End extract_appositive_structure because few words")
         return (new_tree, boundary_index)
     
     # Do not simplify for appositive that following "and" before verb or EOS.
@@ -81,6 +89,7 @@ def extract_appositive_structure(tree: Tree, start_index: int, strategy=1) -> tu
     # EOS, or new_tree[check_index] is verb, period, or and.
 
     if check_index < len(new_tree) and new_tree[check_index, 0] in ["dan", "atau"]:
+        logging.info("End extract_appositive_structure because dan/atau exists")
         return (new_tree, boundary_index)
     
     # Find the attachment
@@ -155,6 +164,10 @@ def detect_appositive_boundary(tree: Tree, start_index: int, keep_structure=True
     elif not tree[index].label().startswith("NP"):
         logging.info(f"End detect_appositive_boundary (expect NP as first element)")
         return (tree, -1)
+
+    elif strategy == 5 and "LocationTime=Yes" in tree[index].label():
+        logging.info(f"End detect_appositive_boundary (expect non-location NP)")
+        return (tree, -1)
     
     index += 1
     finding_repeated_prep_phrases = True
@@ -174,7 +187,7 @@ def detect_appositive_boundary(tree: Tree, start_index: int, keep_structure=True
         elif tree[index, 0] in [",", "."]:
             finding_repeated_prep_phrases = False
         
-        elif strategy == 4 and tree[index].label().startswith("VERB"):
+        elif strategy in [4, 5] and tree[index].label().startswith("VERB"):
             finding_repeated_prep_phrases = False
 
         else:
@@ -204,7 +217,7 @@ def detect_appositive_boundary(tree: Tree, start_index: int, keep_structure=True
         logging.info(f"End detect_appositive_boundary")
         return (tree, index)
     
-    elif strategy == 4 and tree[index].label().startswith("VERB"):
+    elif strategy in [4, 5] and tree[index].label().startswith("VERB"):
         logging.info(f"End detect_appositive_boundary")
         return (tree, index)
     
@@ -643,7 +656,7 @@ def extract_restrictive_relative_clause_structure(tree: Tree, start_index: int) 
 
     return (extracted_tree, start_index + 1)
 
-def extract_prefix_conjunctions(tree: Tree) -> Tree:
+def extract_prefix_conjunctions(tree: Tree, strategy=1) -> Tree:
     if not tree[0].label().startswith("SCONJ"):
         return tree
     
@@ -659,11 +672,11 @@ def extract_prefix_conjunctions(tree: Tree) -> Tree:
 
     # Find NP, verb, and comma
     first_subject_exists = False
-    first_verb_exists = False
+    first_predicate_exists = False
     
     stop_clause = False
     while check_index < len(tree) and tree[check_index, 0] != "." and not stop_clause:
-        if tree[check_index, 0] == "," and first_verb_exists and first_subject_exists: # BRUUUUUUH
+        if tree[check_index, 0] == "," and first_predicate_exists and first_subject_exists:
             if is_comma_for_implicit_conjunction_of_adjectives_or_adverbs(tree, check_index):
                 check_index += 2
             else:
@@ -671,8 +684,8 @@ def extract_prefix_conjunctions(tree: Tree) -> Tree:
         else:
             if is_subject(tree[check_index]):
                 first_subject_exists = True
-            elif tree[check_index].label().startswith("VERB"):
-                first_verb_exists = True
+            elif is_predicate(tree[check_index], strategy=strategy):
+                first_predicate_exists = True
 
             check_index += 1
 
@@ -688,9 +701,9 @@ def extract_prefix_conjunctions(tree: Tree) -> Tree:
         check_index += 1
 
     second_clause_start_index = check_index
-    check_index, second_subject, second_verb = identify_second_conjoined_clause(tree, check_index)
+    check_index, second_subject, second_predicate = identify_second_conjoined_clause(tree, check_index, strategy=strategy)
         
-    if check_index == -1 or not (second_subject is not None and second_verb is not None):
+    if check_index == -1 or not (second_subject is not None and second_predicate is not None):
         return tree
     
     first_clause_tree_children = tree[1:first_clause_stop_index]
@@ -712,17 +725,18 @@ def extract_prefix_conjunctions(tree: Tree) -> Tree:
         children=[tree[0], first_clause_tree, *tree[first_clause_stop_index:second_clause_start_index], second_clause_tree, *tree[check_index:]]
     )
 
-def identify_second_conjoined_clause(tree: Tree, start_index: int):
+def identify_second_conjoined_clause(tree: Tree, start_index: int, strategy=1):
     check_index = start_index
     subject: Tree | None = None
-    verb: Tree | None = None
+    predicate: Tree | None = None
     
     # Find period, verb, and comma
     while check_index < len(tree) and tree[check_index, 0] != ".":
         if is_subject(tree[check_index]):
             subject = tree[check_index]
-        elif tree[check_index].label().startswith("VERB"):
-            verb = tree[check_index]
+        elif is_predicate(tree[check_index]):
+            if strategy != 5 or predicate is None:
+                predicate = tree[check_index]
 
         check_index += 1
     # check_index == len(tree) or comma or period detected
@@ -730,27 +744,28 @@ def identify_second_conjoined_clause(tree: Tree, start_index: int):
     if check_index == len(tree):
         check_index = -1
 
-    return check_index, subject, verb
+    return check_index, subject, predicate
 
-def extract_infix_conjunctions(tree: Tree) -> Tree:
+def extract_infix_conjunctions(tree: Tree, strategy=1) -> Tree:
     # Find conjunction
     check_index = 0
     stop_clause = False
     subject: Tree | None = None
-    verb: Tree | None = None
+    predicate: Tree | None = None
 
     while check_index < len(tree) and tree[check_index, 0] != "." and not stop_clause:
         subtree = tree[check_index]
         if is_valid_conjunction(subtree):
-            if subject is not None and verb is not None:
+            if subject is not None and predicate is not None:
                 stop_clause = True
             else:
                 check_index += 1
         else:
             if is_subject(subtree):
                 subject = subtree
-            elif subtree.label().startswith("VERB"):
-                verb = subtree
+            elif is_predicate(subtree, strategy=strategy):
+                if strategy != 5 or predicate is None:
+                    predicate = subtree
             check_index += 1
 
     if check_index == len(tree) or tree[check_index, 0] == ".":
@@ -768,7 +783,7 @@ def extract_infix_conjunctions(tree: Tree) -> Tree:
 
     check_index += 1
     second_clause_start_index = check_index
-    check_index, subject_exists, verb_exists = identify_second_conjoined_clause(tree, check_index)
+    check_index, subject_exists, verb_exists = identify_second_conjoined_clause(tree, check_index, strategy=strategy)
         
     if check_index == -1:
         return tree
@@ -781,7 +796,7 @@ def extract_infix_conjunctions(tree: Tree) -> Tree:
     if not subject_exists:
         second_clause_tree_children.insert(0, subject)
         if not verb_exists:
-            second_clause_tree_children.insert(1, verb)
+            second_clause_tree_children.insert(1, predicate)
 
     second_clause_tree = Tree(
         node="CONJ-CLAUSE-2",
@@ -792,6 +807,12 @@ def extract_infix_conjunctions(tree: Tree) -> Tree:
         node=tree.label(),
         children=[first_clause_tree, *tree[first_clause_stop_index:conjunction_index + 1], second_clause_tree, *tree[check_index:]]
     )
+
+def is_predicate(subtree, strategy=1):
+    if strategy != 5:
+        return subtree.label().startswith("VERB")
+    else:
+        return subtree.label().startswith("VERB") or subtree.label().startswith("ADJ")
 
 def is_valid_conjunction(tree: Tree):
     return (tree.label().startswith("SCONJ") or tree.label().startswith("CCONJ")) and tree[0] != "untuk"
